@@ -1,6 +1,7 @@
 
 # Example
 
+Based on [The Physics of Putting by A.R. Penner](https://www.researchgate.net/publication/237196126_The_physics_of_putting)
 
 ```
 $ python3 ./stimpmeter.py 2 10
