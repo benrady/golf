@@ -1,0 +1,8 @@
+---
+name: golf
+
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ipython
