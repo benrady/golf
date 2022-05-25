@@ -1,6 +1,7 @@
 MINICONDA=$(CURDIR)/.miniconda3
 CONDA=$(MINICONDA)/bin/conda
 VENV=$(CURDIR)/.venv
+ENVIRONMENT=$(VENV)/environment.yml
 PYTHON=$(VENV)/bin/python
 
 .SILENT:
@@ -17,8 +18,12 @@ $(PYTHON): $(CONDA)
 	echo "Installing python to $(PYTHON)"
 	$(CONDA) env create -p $(VENV)
 
+$(ENVIRONMENT): $(PYTHON) environment.yml
+	$(CONDA) env update --prune --quiet -p $(VENV) -f environment.yml
+	cp environment.yml $(ENVIRONMENT)
+
 .PHONY: deps
-deps: $(PYTHON) ## Install dependencies
+deps: $(ENVIRONMENT) ## Install dependencies
 
 run: deps ## Run the stimpmeter example
 	$(PYTHON) stimpmeter.py 2 10
