@@ -1,4 +1,4 @@
-import stimpmeter
+from putting import stimpmeter
 
 def ratio(slope, stimp):
     if slope == 0:

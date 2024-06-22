@@ -4,6 +4,7 @@ MAMBA := $(MICRO_MAMBA)/micromamba
 VENV := $(PWD)/.venv
 DEPS := $(VENV)/.deps
 PYTHON=$(VENV)/bin/python
+PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
 
 .SILENT:
 
@@ -29,8 +30,11 @@ $(DEPS): environment.yml $(PYTHON)
 deps: $(DEPS) ## Install dependencies
 
 .PHONY: test
-test: $(DEPS)  ## Run tests and linters
-	$(PYTHON) -m pytest -vv
+test: $(DEPS) ## Run tests and linters
+	$(PYTHON_CMD) -m pytest -vv
+
+watch: $(DEPS) ## Run tests continuously
+	$(PYTHON_CMD) -m pytest_watch --runner $(VENV)/bin/pytest --ignore $(VENV) --ignore $(MICRO_MAMBA)
 
 putting_chart: deps ## Generate a CSV file scaling distance by slope and green speed
-	$(PYTHON) putting/putting_factors.py | tee putting.csv
+	$(PYTHON_CMD) putting/putting_factors.py | tee putting.csv
