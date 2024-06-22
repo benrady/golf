@@ -1,6 +1,9 @@
 import sys
 from math import sin, radians
 
+### From "The Physics of Putting", Penner (2002)
+# http://www.raypenner.com/golf-putting.pdf
+
 COF = {
         6:  0.131,
         7:  0.1125,
@@ -18,7 +21,6 @@ def calculate(percent_grade, stimp, v=72):
     g = 32 * 12 # Gravity in inches per second per second
     period = 1 / ticks_per_second
 
-    ### From "The Physics of Putting", Penner (2002)
     # Force of friction
     drag = -(5/7) * friction * g * period
 
