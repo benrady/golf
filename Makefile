@@ -1,7 +1,8 @@
-MINICONDA=$(CURDIR)/.miniconda3
-CONDA=$(MINICONDA)/bin/conda
-VENV=$(CURDIR)/.venv
-ENVIRONMENT=$(VENV)/environment.yml
+SHELL := $(shell which bash)
+MICRO_MAMBA := $(CURDIR)/.micromamba
+MAMBA := $(MICRO_MAMBA)/micromamba
+VENV := $(PWD)/.venv
+DEPS := $(VENV)/.deps
 PYTHON=$(VENV)/bin/python
 
 .SILENT:
@@ -9,21 +10,27 @@ PYTHON=$(VENV)/bin/python
 help:
 	grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-$(CONDA):
-	curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > $(CURDIR)/miniconda.sh
-	bash $(CURDIR)/miniconda.sh -u -b -p $(MINICONDA)
-	rm miniconda.sh
+$(MAMBA):
+	echo "Installing Mamba..."
+	$(SHELL) ./install-micromamba.sh "$(MICRO_MAMBA)"
 
-$(PYTHON): $(CONDA)
-	echo "Installing python to $(PYTHON)"
-	$(CONDA) env create -p $(VENV)
+$(PYTHON): | $(MAMBA)
+	echo "Installing Python..."
+	$(MAMBA) create --quiet --yes -p $(VENV)
 
-$(ENVIRONMENT): $(PYTHON) environment.yml
-	$(CONDA) env update --prune --quiet -p $(VENV) -f environment.yml
-	cp environment.yml $(ENVIRONMENT)
+$(DEPS): environment.yml $(PYTHON)
+	echo "Installing dependencies..."
+	rm -rf $(VENV)
+	$(MAMBA) create --quiet --yes -p $(VENV)
+	$(MAMBA) install --quiet --yes -p $(VENV) -f environment.yml
+	cp environment.yml $(DEPS)
 
 .PHONY: deps
-deps: $(ENVIRONMENT) ## Install dependencies
+deps: $(DEPS) ## Install dependencies
 
-run: deps ## Run the stimpmeter example
-	$(PYTHON) stimpmeter.py 2 10
+.PHONY: test
+test: $(DEPS)  ## Run tests and linters
+	$(PYTHON_CMD) -m pytest -vv
+
+putting_chart: deps ## Generate a CSV file scaling distance by slope and green speed
+	$(PYTHON) putting/putting_factors.py | tee putting.csv

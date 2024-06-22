@@ -11,9 +11,10 @@ def ratio(slope, stimp):
         return 0
     return round((10 * 100 * flat_distance) / (distance * stimp))
 
-print("8,9,10,11")
-for slope in range(7, -8, -1):
-    line = f"{slope}"
-    for stimp in range(8, 12):
-        line += f",{ratio(slope, stimp)}"
-    print(line)
+if __name__ == "__main__":
+    print("8,9,10,11,12,13")
+    for slope in range(7, -8, -1):
+        line = f"{slope}"
+        for stimp in range(8, 14):
+            line += f",{ratio(slope, stimp)}"
+        print(line)
