@@ -30,7 +30,7 @@ deps: $(DEPS) ## Install dependencies
 
 .PHONY: test
 test: $(DEPS)  ## Run tests and linters
-	$(PYTHON_CMD) -m pytest -vv
+	$(PYTHON) -m pytest -vv
 
 putting_chart: deps ## Generate a CSV file scaling distance by slope and green speed
 	$(PYTHON) putting/putting_factors.py | tee putting.csv
