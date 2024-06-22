@@ -3,5 +3,8 @@ __pycache__
 .micromamba
 .venv
 
+.DS_Store
+SkytrakData/*
+
 # Generated data
 putting.csv

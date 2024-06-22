@@ -8,6 +8,8 @@ PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
 
 .SILENT:
 
+FORCE:
+
 help:
 	grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
@@ -33,8 +35,13 @@ deps: $(DEPS) ## Install dependencies
 test: $(DEPS) ## Run tests and linters
 	$(PYTHON_CMD) -m pytest -vv
 
+.PHONY: watch
 watch: $(DEPS) ## Run tests continuously
 	$(PYTHON_CMD) -m pytest_watch --runner $(VENV)/bin/pytest --ignore $(VENV) --ignore $(MICRO_MAMBA)
 
+.PHONY: putting_chart
 putting_chart: deps ## Generate a CSV file scaling distance by slope and green speed
 	$(PYTHON_CMD) putting/putting_factors.py | tee putting.csv
+
+SkytrakData/%.csv: FORCE
+	$(PYTHON_CMD) skytrak/parser.py $@
