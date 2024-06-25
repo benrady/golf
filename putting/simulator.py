@@ -14,7 +14,13 @@ COF = {
         12: 0.0655,
         13: 0.0605}
 
-def calculate(percent_grade, stimp, v=72):
+def roll(percent_grade, stimp, v=72):
+    """
+    :param percent_grade: The side slope of the putt, as measured in percent grade (ex: float(3.5) == 3.5% grade)
+    :param stimp: Green stimp as an integer (ex: 10)
+    :param v:
+    :return: A tuple of the distance rolled in inches, and the number of seconds it took to roll
+    """
     degrees = percent_grade / 2.22
     friction = COF[stimp]
     ticks_per_second = 1000
@@ -42,6 +48,18 @@ def calculate(percent_grade, stimp, v=72):
 
     return (distance / 12), seconds
 
+
+def inches_of_break(percent_grade, stimp, distance):
+    """
+    :param percent_grade: The side slope of the putt, as measured in percent grade (ex: float(3.5) == 3.5% grade)
+    :param stimp: Green stimp as an integer (ex: 10)
+    :param distance: Distance in feet
+    :return: Break in inches
+    """
+    # Formula from Geoff Mangum https://swingmangolf.com/putting-zone-basic-math/
+    return distance * percent_grade * stimp / 20
+
+
 if __name__ == "__main__":
     if (len(sys.argv) < 3):
         print("Usage: python3 ./stimpmeter.py <slope in % grade> <speed in stimp> [initial speed in in/sec]")
@@ -56,14 +74,14 @@ if __name__ == "__main__":
 
     print(f"On a stimp {stimp} green with a {slope}% slope at {v} inches per second ({v/17.6} mph):")
 
-    flat_distance, flat_seconds = calculate(0, stimp, v)
+    flat_distance, flat_seconds = roll(0, stimp, v)
 
-    up_distance, up_seconds = calculate(slope, stimp, v)
+    up_distance, up_seconds = roll(slope, stimp, v)
 
     print("Went up %f feet (%f) in %f seconds" % (up_distance, up_distance - stimp, up_seconds))
     print("Up Scaling factor: %f" % (flat_distance / up_distance))
 
-    down_distance, down_seconds = calculate(-slope, stimp, v)
+    down_distance, down_seconds = roll(-slope, stimp, v)
     assert down_distance is not None, "Ball will never stop going down!"
     print("Went down %f feet (+%f) in %f seconds" % (down_distance, down_distance - stimp, down_seconds))
     print("Down Scaling factor: %f" % (flat_distance / down_distance))

@@ -2,7 +2,7 @@ import sys
 import io
 import csv
 
-from putting import stimpmeter
+from putting import simulator
 
 def ratio(slope: int, stimp: int) -> float:
     """
@@ -13,9 +13,9 @@ def ratio(slope: int, stimp: int) -> float:
     if slope == 0:
         return round(100 * 10.0 / stimp)
      # Should be the same as the stimp, but we're correcting for error
-    flat_distance, _ = stimpmeter.calculate(0, stimp)
+    flat_distance, _ = simulator.roll(0, stimp)
 
-    distance, _ = stimpmeter.calculate(slope, stimp)
+    distance, _ = simulator.roll(slope, stimp)
     if distance is None:
         return 0
     return round((10 * 100 * flat_distance) / (distance * stimp))

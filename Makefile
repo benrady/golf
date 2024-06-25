@@ -5,8 +5,12 @@ VENV := $(PWD)/.venv
 DEPS := $(VENV)/.deps
 PYTHON=$(VENV)/bin/python
 PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
+PLATFORM=$(shell uname | tr '[:upper:]' '[:lower:]' | sed 's/darwin/osx/g')
+ARCH := $(shell uname -m | sed 's/x86_64/64/g')
 
+ifndef VERBOSE
 .SILENT:
+endif
 
 FORCE:
 
@@ -15,7 +19,8 @@ help:
 
 $(MAMBA):
 	echo "Installing Mamba..."
-	$(SHELL) ./install-micromamba.sh "$(MICRO_MAMBA)"
+	mkdir -p "$(MICRO_MAMBA)"
+	curl -Ls https://micro.mamba.pm/api/micromamba/$(PLATFORM)-$(ARCH)/latest | tar -xj -C "$(MICRO_MAMBA)" --strip-components=1 bin/micromamba
 
 $(PYTHON): | $(MAMBA)
 	echo "Installing Python..."
