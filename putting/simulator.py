@@ -1,49 +1,53 @@
+import math
 import sys
 from math import sin, radians
 
-### From "The Physics of Putting", Penner (2002)
+### Loosely based on "The Physics of Putting", Penner (2002)
 # http://www.raypenner.com/golf-putting.pdf
 
 COF = {
-        6:  0.131,
-        7:  0.1125,
-        8:  0.0985,
-        9:  0.0875,
-        10: 0.0785,
-        11: 0.0715,
-        12: 0.0655,
-        13: 0.0605}
+    6: 0.0,
+    7: 0.,
+    8: 0.0,
+    9: 0.0,
+    10: 0.0979,
+    11: 0.0,
+    12: 0.0655,
+    13: 0.0
+}
 
-def roll(percent_grade, stimp, v=72):
+
+def roll(percent_grade, stimp, angle_of_hit, vel=72):
     """
     :param percent_grade: The side slope of the putt, as measured in percent grade (ex: float(3.5) == 3.5% grade)
     :param stimp: Green stimp as an integer (ex: 10)
     :param v:
     :return: A tuple of the distance rolled in inches, and the number of seconds it took to roll
     """
-    degrees = percent_grade / 2.22
-    friction = COF[stimp]
+    g = 32 * 12  # Gravity in inches per second per second
+    slope_in_degrees = math.degrees(math.atan(percent_grade / 100.0))
+    cp_distance_from_com = COF[stimp]
     ticks_per_second = 1000
-    g = 32 * 12 # Gravity in inches per second per second
     period = 1 / ticks_per_second
+    phi = math.atan(cp_distance_from_com * math.cos(slope_in_degrees) * math.sin(angle_of_hit) - (2/5) * math.sin(slope_in_degrees))
+    backwards_force = (cp_distance_from_com * math.cos(slope_in_degrees) * math.cos(angle_of_hit) * g) / ((1 + (2/5)) * math.cos(phi))
 
-    # Force of friction
-    drag = -(5/7) * friction * g * period
+    accl_x = -g * math.sin(slope_in_degrees) - (backwards_force * math.sin(phi))
+    accl_y = -(backwards_force * math.cos(phi))
+    accl = math.sqrt(accl_x ** 2 + accl_y ** 2)
 
-    ###
-
-    # Force of gravity, deflected by the slope
-    drop = -g * sin(radians(degrees)) * period
-
-    if drag + drop >= 0:
-        return None, None
+    vel_x = vel * math.sin(angle_of_hit)
+    vel_y = vel * math.cos(angle_of_hit)
 
     distance = 0
     seconds = 0
-    while v > 0:
-        v = v + drop + drag
 
-        distance += v * period
+    while vel > 0:
+        vel_x += accl_x * period
+        vel_y += + accl_y * period
+        vel -= math.sqrt(vel_x ** 2 + vel_y ** 2)
+
+        distance += (vel * period) + (0.5 * accl * period)
         seconds += period
 
     return (distance / 12), seconds
@@ -74,7 +78,7 @@ if __name__ == "__main__":
 
     print(f"On a stimp {stimp} green with a {slope}% slope at {v} inches per second ({v/17.6} mph):")
 
-    flat_distance, flat_seconds = roll(0, stimp, v)
+    flat_distance, flat_seconds = roll(0, stimp, 0, v)
 
     up_distance, up_seconds = roll(slope, stimp, v)
 
