@@ -24,31 +24,35 @@ def roll(percent_grade, stimp, angle_of_hit, vel=72):
     :param v:
     :return: A tuple of the distance rolled in inches, and the number of seconds it took to roll
     """
+    mass_of_ball = 1
     g = 32 * 12  # Gravity in inches per second per second
-    slope_in_degrees = math.degrees(math.atan(percent_grade / 100.0))
+    slope_in_radians = math.atan(percent_grade / 100.0)
     cp_distance_from_com = COF[stimp]
     ticks_per_second = 1000
     period = 1 / ticks_per_second
-    phi = math.atan(cp_distance_from_com * math.cos(slope_in_degrees) * math.sin(angle_of_hit) - (2/5) * math.sin(slope_in_degrees))
-    backwards_force = (cp_distance_from_com * math.cos(slope_in_degrees) * math.cos(angle_of_hit) * g) / ((1 + (2/5)) * math.cos(phi))
+    phi = math.atan((cp_distance_from_com * math.cos(slope_in_radians) * math.sin(angle_of_hit)) / ((cp_distance_from_com * math.cos(slope_in_radians) * math.cos(slope_in_radians)) - ((2/5) * math.sin(slope_in_radians))))
+    backwards_force = ((cp_distance_from_com * math.cos(slope_in_radians) * math.cos(angle_of_hit)) * mass_of_ball * g) / ((1 + (2/5)) * math.cos(phi))
 
-    accl_x = -g * math.sin(slope_in_degrees) - (backwards_force * math.sin(phi))
-    accl_y = -(backwards_force * math.cos(phi))
-    accl = math.sqrt(accl_x ** 2 + accl_y ** 2)
+    x_accel = (backwards_force * math.sin(phi)) / mass_of_ball
+    y_accel = (g * math.sin(slope_in_radians)) - ((backwards_force * math.cos(phi)) / mass_of_ball)
 
-    vel_x = vel * math.sin(angle_of_hit)
-    vel_y = vel * math.cos(angle_of_hit)
+    x_vel = vel * math.sin(angle_of_hit)
+    y_vel = vel * math.cos(angle_of_hit)
 
     distance = 0
     seconds = 0
 
-    while vel > 0:
-        vel_x += accl_x * period
-        vel_y += + accl_y * period
-        vel -= math.sqrt(vel_x ** 2 + vel_y ** 2)
+    count = 0
+    while x_vel >= 0 and y_vel >= 0:
+        x_vel += x_accel * period
+        y_vel += y_accel * period
 
-        distance += (vel * period) + (0.5 * accl * period)
+        x_displacement = (x_vel * period) - (0.5 * x_accel * period)
+        y_displacement = (y_vel * period) - (0.5 * y_accel * period)
+
+        distance += math.sqrt(x_displacement ** 2 + y_displacement ** 2)
         seconds += period
+        count += 1
 
     return (distance / 12), seconds
 
@@ -80,12 +84,12 @@ if __name__ == "__main__":
 
     flat_distance, flat_seconds = roll(0, stimp, 0, v)
 
-    up_distance, up_seconds = roll(slope, stimp, v)
+    up_distance, up_seconds = roll(slope, stimp, 0, v)
 
     print("Went up %f feet (%f) in %f seconds" % (up_distance, up_distance - stimp, up_seconds))
-    print("Up Scaling factor: %f" % (flat_distance / up_distance))
+    #print("Up Scaling factor: %f" % (flat_distance / up_distance))
 
-    down_distance, down_seconds = roll(-slope, stimp, v)
+    down_distance, down_seconds = roll(-slope, stimp, 0, v)
     assert down_distance is not None, "Ball will never stop going down!"
     print("Went down %f feet (+%f) in %f seconds" % (down_distance, down_distance - stimp, down_seconds))
-    print("Down Scaling factor: %f" % (flat_distance / down_distance))
+    #print("Down Scaling factor: %f" % (flat_distance / down_distance))
