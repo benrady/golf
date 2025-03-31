@@ -1,41 +1,38 @@
+import math
 import sys
 from math import sin, radians
 
 ### From "The Physics of Putting", Penner (2002)
 # http://www.raypenner.com/golf-putting.pdf
 
-COF = {
-        6:  0.131,
-        7:  0.1125,
-        8:  0.0985,
-        9:  0.0875,
-        10: 0.0785,
-        11: 0.0715,
-        12: 0.0655,
-        13: 0.0605}
+INITIAL_STIMPMETER_VELOCITY = 72 # inches per second
 
-def roll(percent_grade, stimp, v=72):
+def roll(percent_grade, stimp, v=INITIAL_STIMPMETER_VELOCITY):
     """
     :param percent_grade: The side slope of the putt, as measured in percent grade (ex: float(3.5) == 3.5% grade)
     :param stimp: Green stimp as an integer (ex: 10)
-    :param v:
+    :param v: initial velocity in inches per second
     :return: A tuple of the distance rolled in inches, and the number of seconds it took to roll
     """
-    degrees = percent_grade / 2.22
-    friction = COF[stimp]
+    slope_radians = math.atan(percent_grade / 100.0)
+
+    # Weber and Magnum both model the CoF as a C/X function, so I've used a power regression
+    # to fit the data using the 4 and 12 stimp values from Penner.
+    # https://www.desmos.com/calculator/5pu5wa05ef
+    friction = 0.789077/stimp
+
     ticks_per_second = 1000
     g = 32 * 12 # Gravity in inches per second per second
     period = 1 / ticks_per_second
 
-    # Force of friction
+    # Velocity adjustment due to friction of the rolling ball
     drag = -(5/7) * friction * g * period
 
-    ###
-
-    # Force of gravity, deflected by the slope
-    drop = -g * sin(radians(degrees)) * period
+    # Velocity adjustment due to gravity, deflected by the slope
+    drop = -g * sin(slope_radians) * period
 
     if drag + drop >= 0:
+        # If the loop would run infinitely, return now
         return None, None
 
     distance = 0
@@ -67,8 +64,7 @@ if __name__ == "__main__":
     slope = float(sys.argv[1]) # Slope in percent grade
     stimp = int(sys.argv[2]) # Speed of the green as measured by a stimpmeter
 
-# Ball is moving 72 inches per second at the bottom of a stimpmeter ramp, so that's the default velocity
-    v = 72
+    v = INITIAL_STIMPMETER_VELOCITY
     if len(sys.argv) == 4:
         v = float(sys.argv[3])
 

@@ -8,14 +8,14 @@ PYTHON_CMD := PYTHONPATH=$(shell pwd) $(PYTHON)
 PLATFORM=$(shell uname | tr '[:upper:]' '[:lower:]' | sed 's/darwin/osx/g')
 ARCH := $(shell uname -m | sed 's/x86_64/64/g')
 
+help:
+	grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
 ifndef VERBOSE
 .SILENT:
 endif
 
 FORCE:
-
-help:
-	grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 $(MAMBA):
 	echo "Installing Mamba..."
