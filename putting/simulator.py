@@ -1,50 +1,58 @@
+import math
 import sys
 from math import sin, radians
 
-### From "The Physics of Putting", Penner (2002)
+### Loosely based on "The Physics of Putting", Penner (2002)
 # http://www.raypenner.com/golf-putting.pdf
 
 COF = {
-        6:  0.131,
-        7:  0.1125,
-        8:  0.0985,
-        9:  0.0875,
-        10: 0.0785,
-        11: 0.0715,
-        12: 0.0655,
-        13: 0.0605}
+    6: 0.0,
+    7: 0.,
+    8: 0.0,
+    9: 0.0,
+    10: 0.0979,
+    11: 0.0,
+    12: 0.0655,
+    13: 0.0
+}
 
-def roll(percent_grade, stimp, v=72):
+
+def roll(percent_grade, stimp, angle_of_hit, vel=72):
     """
     :param percent_grade: The side slope of the putt, as measured in percent grade (ex: float(3.5) == 3.5% grade)
     :param stimp: Green stimp as an integer (ex: 10)
     :param v:
     :return: A tuple of the distance rolled in inches, and the number of seconds it took to roll
     """
-    degrees = percent_grade / 2.22
-    friction = COF[stimp]
+    mass_of_ball = 1
+    g = 32 * 12  # Gravity in inches per second per second
+    slope_in_radians = math.atan(percent_grade / 100.0)
+    cp_distance_from_com = COF[stimp]
     ticks_per_second = 1000
-    g = 32 * 12 # Gravity in inches per second per second
     period = 1 / ticks_per_second
+    phi = math.atan((cp_distance_from_com * math.cos(slope_in_radians) * math.sin(angle_of_hit)) / ((cp_distance_from_com * math.cos(slope_in_radians) * math.cos(slope_in_radians)) - ((2/5) * math.sin(slope_in_radians))))
+    backwards_force = ((cp_distance_from_com * math.cos(slope_in_radians) * math.cos(angle_of_hit)) * mass_of_ball * g) / ((1 + (2/5)) * math.cos(phi))
 
-    # Force of friction
-    drag = -(5/7) * friction * g * period
+    x_accel = (backwards_force * math.sin(phi)) / mass_of_ball
+    y_accel = (g * math.sin(slope_in_radians)) - ((backwards_force * math.cos(phi)) / mass_of_ball)
 
-    ###
-
-    # Force of gravity, deflected by the slope
-    drop = -g * sin(radians(degrees)) * period
-
-    if drag + drop >= 0:
-        return None, None
+    x_vel = vel * math.sin(angle_of_hit)
+    y_vel = vel * math.cos(angle_of_hit)
 
     distance = 0
     seconds = 0
-    while v > 0:
-        v = v + drop + drag
 
-        distance += v * period
+    count = 0
+    while x_vel >= 0 and y_vel >= 0:
+        x_vel += x_accel * period
+        y_vel += y_accel * period
+
+        x_displacement = (x_vel * period) - (0.5 * x_accel * period)
+        y_displacement = (y_vel * period) - (0.5 * y_accel * period)
+
+        distance += math.sqrt(x_displacement ** 2 + y_displacement ** 2)
         seconds += period
+        count += 1
 
     return (distance / 12), seconds
 
@@ -74,14 +82,14 @@ if __name__ == "__main__":
 
     print(f"On a stimp {stimp} green with a {slope}% slope at {v} inches per second ({v/17.6} mph):")
 
-    flat_distance, flat_seconds = roll(0, stimp, v)
+    flat_distance, flat_seconds = roll(0, stimp, 0, v)
 
-    up_distance, up_seconds = roll(slope, stimp, v)
+    up_distance, up_seconds = roll(slope, stimp, 0, v)
 
     print("Went up %f feet (%f) in %f seconds" % (up_distance, up_distance - stimp, up_seconds))
-    print("Up Scaling factor: %f" % (flat_distance / up_distance))
+    #print("Up Scaling factor: %f" % (flat_distance / up_distance))
 
-    down_distance, down_seconds = roll(-slope, stimp, v)
+    down_distance, down_seconds = roll(-slope, stimp, 0, v)
     assert down_distance is not None, "Ball will never stop going down!"
     print("Went down %f feet (+%f) in %f seconds" % (down_distance, down_distance - stimp, down_seconds))
-    print("Down Scaling factor: %f" % (flat_distance / down_distance))
+    #print("Down Scaling factor: %f" % (flat_distance / down_distance))
